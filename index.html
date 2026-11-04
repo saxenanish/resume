@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anish Saxena - Interactive CV</title>
+  
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              teal: '#14b8a6',
+              blue: '#3b82f6',
+              dark: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0f172a; /* slate-900 */
+      color: #cbd5e1; /* slate-300 */
+      background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 70%);
+      background-attachment: fixed;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+      background: rgba(30, 41, 59, 0.5); /* slate-800/50 */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.8); /* slate-700 */
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border-radius: 16px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(20, 184, 166, 0.4);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Text Gradients */
+    .text-gradient {
+      background: linear-gradient(to right, #3b82f6, #14b8a6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Pipeline Architecture */
+    .pipeline-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      padding: 20px 0;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #334155 transparent;
+    }
+    
+    .node {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 130px;
+      position: relative;
+      z-index: 10;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .node-icon { font-size: 24px; margin-bottom: 8px; }
+    .node-title { font-size: 13px; font-weight: 600; color: #e2e8f0; text-align: center; }
+    .node-sub { font-size: 11px; color: #64748b; text-align: center; margin-top: 2px; }
+
+    /* Connectors & Animations */
+    .connector {
+      flex-grow: 1;
+      min-width: 30px;
+      height: 2px;
+      background: #334155;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .data-particle {
+      position: absolute;
+      top: -3px;
+      left: 0;
+      width: 30px;
+      height: 8px;
+      background: linear-gradient(90deg, transparent, var(--particle-color), transparent);
+      border-radius: 50%;
+      opacity: 0;
+      filter: blur(2px);
+    }
+
+    @keyframes flow {
+      0% { left: -30px; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { left: 100%; opacity: 0; }
+    }
+
+    .animate-flow { animation: flow 2.5s infinite linear; }
+    .delay-1 { animation-delay: 0.8s; }
+    .delay-2 { animation-delay: 1.6s; }
+
+    @keyframes pulse-glow {
+      0% { box-shadow: 0 0 0 0 var(--glow-color); }
+      70% { box-shadow: 0 0 0 12px transparent; }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+
+    .active-teal { --glow-color: rgba(20, 184, 166, 0.4); animation: pulse-glow 2s infinite; border-color: rgba(20, 184, 166, 0.5); }
+    .active-blue { --glow-color: rgba(59, 130, 246, 0.4); animation: pulse-glow 2s infinite; border-color: rgba(59, 130, 246, 0.5); }
+    .active-rose { --glow-color: rgba(244, 63, 94, 0.4); animation: pulse-glow 2s infinite; border-color: rgba(244, 63, 94, 0.5); }
+
+    .pt-blue { --particle-color: #3b82f6; }
+    .pt-teal { --particle-color: #14b8a6; }
+    .pt-rose { --particle-color: #f43f5e; }
+
+    /* Tooltip Custom styling */
+    .custom-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+      transform: translateY(10px);
+    }
+    .group:hover .custom-tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Interactive Dotted Underline */
+    .interactive-title {
+      border-bottom: 1px dashed rgba(20, 184, 166, 0.6);
+      cursor: help;
+      padding-bottom: 2px;
+    }
+  </style>
+</head>
+<body class="py-10 px-4 sm:px-6 lg:px-8">
+
+  <div class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- HEADER -->
+    <header class="glass-card p-10 relative overflow-hidden">
+      <!-- Glow Effects -->
+      <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 pointer-events-none"></div>
+      
+      <div class="relative z-10 flex flex-col gap-6">
+        <div>
+          <h1 class="text-5xl font-extrabold text-white tracking-tight mb-2">Anish Saxena</h1>
+          <h2 class="text-2xl font-semibold text-gradient mb-6">Risk Management & Internal Audit Leader</h2>
+          <p class="text-slate-300 max-w-4xl leading-relaxed">
+            Digital-first auditor applying a systematic, disciplined approach to evaluate and improve enterprise risk, control, and governance processes. I am a collaborative, hands-on leader equally comfortable setting board-level strategy as I am executing end-to-end fieldwork. Proven track record in leading regional functions to regulatory & IIA best practices, undertaking rigorous capacity and resource planning, architecting AI-driven control testing pipelines, and deputising for senior audit leadership to resolve complex assurance issues across decentralized global businesses.
+          </p>
+        </div>
+        
+        <!-- Contact Info & Eligibility Cluster -->
+        <div class="flex flex-wrap items-center gap-4 text-sm text-slate-300 bg-slate-800/80 p-4 rounded-xl border border-slate-700/50 w-full shadow-inner mt-4">
+          <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-brand-teal w-4 text-center"></i> London, UK</div>
+          <span class="text-slate-600 hidden md:inline">|</span>
+          <div class="flex items-center gap-2"><i class="fa-brands fa-linkedin text-brand-teal w-4 text-center"></i> <a href="https://linkedin.com/in/saxenanish" target="_blank" class="hover:text-brand-teal transition">linkedin.com/in/saxenanish</a></div>
+          <span class="text-slate-600 hidden md:inline">|</span>
+          <div class="flex items-center gap-2"><i class="fa-solid fa-envelope text-brand-teal w-4 text-center"></i> anishsaxena@icai.org</div>
+          <span class="text-slate-600 hidden md:inline">|</span>
+          <div class="flex items-center gap-2"><i class="fa-solid fa-phone text-brand-teal w-4 text-center"></i> +447478 275587</div>
+          
+          <div class="flex-grow"></div> <!-- Spacer to push the badge to the right if space allows -->
+          
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-900/30 border border-teal-500/40 mt-2 sm:mt-0">
+            <i class="fa-solid fa-passport text-teal-400"></i>
+            <span class="text-xs font-bold text-teal-300 uppercase tracking-wide">Eligible to work in UK without sponsorship</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- METRICS GRID (With Tooltips) -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Metric 1 -->
+      <div class="glass-card p-6 flex flex-col justify-center items-center text-center group relative cursor-pointer">
+        <div class="text-4xl font-bold text-slate-100 group-hover:text-brand-blue transition-colors">18+</div>
+        <div class="text-xs text-slate-400 uppercase tracking-wider mt-2 font-semibold">Years Experience</div>
+        <!-- Tooltip -->
+        <div class="custom-tooltip absolute bottom-full mb-4 w-64 p-3 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg shadow-xl z-50">
+          Over 18 years driving risk mitigation, enterprise governance, and global audit strategy across Fortune 500 and FTSE 100 firms.
+          <!-- Down arrow -->
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-700"></div>
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent border-t-slate-900 -mt-[2px]"></div>
+        </div>
+      </div>
+
+      <!-- Metric 2 -->
+      <div class="glass-card p-6 flex flex-col justify-center items-center text-center group relative cursor-pointer">
+        <div class="text-4xl font-bold text-slate-100 group-hover:text-brand-teal transition-colors">8</div>
+        <div class="text-xs text-slate-400 uppercase tracking-wider mt-2 font-semibold">Countries Worked</div>
+        <!-- Tooltip -->
+        <div class="custom-tooltip absolute bottom-full mb-4 w-64 p-3 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg shadow-xl z-50">
+          Extensive global footprint executing complex audits and risk assignments across the UK, EU, US, Middle East, Africa, and India.
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-700"></div>
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent border-t-slate-900 -mt-[2px]"></div>
+        </div>
+      </div>
+
+      <!-- Metric 3 -->
+      <div class="glass-card p-6 flex flex-col justify-center items-center text-center group relative cursor-pointer">
+        <div class="text-4xl font-bold text-slate-100 group-hover:text-brand-blue transition-colors">150+</div>
+        <div class="text-xs text-slate-400 uppercase tracking-wider mt-2 font-semibold">Audits Delivered</div>
+        <!-- Tooltip -->
+        <div class="custom-tooltip absolute bottom-full mb-4 w-64 p-3 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg shadow-xl z-50">
+          Delivered comprehensive, full-lifecycle regulatory, operational, and IT audits, ensuring zero material findings.
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-700"></div>
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent border-t-slate-900 -mt-[2px]"></div>
+        </div>
+      </div>
+
+      <!-- Metric 4 -->
+      <div class="glass-card p-6 flex flex-col justify-center items-center text-center group relative overflow-visible cursor-pointer">
+        <div class="text-4xl font-bold text-slate-100 group-hover:text-brand-teal transition-colors">1200<span class="text-xl">h</span></div>
+        <div class="text-xs text-brand-teal uppercase tracking-wider mt-2 font-semibold">Saved via Automation/Yr</div>
+        <!-- Tooltip -->
+        <div class="custom-tooltip absolute bottom-full mb-4 w-64 p-3 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg shadow-xl z-50">
+          Architected AI and Python-driven pipelines that eliminated manual testing, delivering real-time risk intelligence.
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-slate-700"></div>
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent border-t-slate-900 -mt-[2px]"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN CONTENT LAYOUT (2 Columns) -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      
+      <!-- LEFT COLUMN: Experience & Tech (Takes up 2/3 width) -->
+      <div class="xl:col-span-2 space-y-8">
+        
+        <!-- PROFESSIONAL EXPERIENCE -->
+        <section class="glass-card p-8">
+          <h3 class="text-2xl font-bold mb-8 flex items-center gap-3 text-white border-b border-slate-700 pb-4">
+            <i class="fa-solid fa-briefcase text-brand-blue"></i> Professional Experience
+          </h3>
+          
+          <div class="space-y-10">
+            <!-- Moody's -->
+            <div class="relative pl-6 border-l-2 border-slate-700 hover:border-brand-blue transition-colors">
+              <div class="absolute left-[-9px] top-1 w-4 h-4 rounded-full bg-slate-900 border-2 border-brand-blue shadow-[0_0_10px_rgba(59,130,246,0.6)]"></div>
+              
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2">
+                <h4 class="text-xl font-bold text-white">Moody's Corporation</h4>
+                <span class="text-sm font-medium text-slate-400 bg-slate-800 px-3 py-1 rounded-full mt-2 sm:mt-0">2015 – Present</span>
+              </div>
+              <p class="text-brand-blue font-semibold mb-1">AVP, Risk & Internal Audit (Head of Vertical)</p>
+              <p class="text-xs text-slate-500 mb-4"><i class="fa-solid fa-location-dot mr-1"></i> London UK [previously: Frankfurt, New York, Gurugram]</p>
+              
+              <ul class="text-sm text-slate-300 space-y-3 list-disc pl-4 marker:text-brand-blue">
+                <li><strong class="text-slate-100">Automation & Data Analytics:</strong> Co-leading design and deployment of automated control-testing pipelines (via Python + Power Automate + Copilot Studio + Claude Code), eliminating 1200 hours of manual effort annually. Spearheaded Gen-AI adoption for continuous risk assessment and real-time regulatory audit reporting.</li>
+                <li><strong class="text-slate-100">Revenue Optimization:</strong> Leveraged advanced data analytics to identify and champion a critical revenue and monetization standardization project, partnering with the business to implement improvements that yielded ~$50M in annual savings.</li>
+                <li><strong class="text-slate-100">Team Leadership:</strong> Led, developed, and coached a diverse, high-performing global team of 9 professionals, fostering a culture of accountability, continuous learning, and audit excellence.</li>
+                <li><strong class="text-slate-100">Regulatory & Third-Party Risk:</strong> Led audit reviews of AML/financial crime controls, credit rating methodologies, FCA/ESMA regulatory obligations; managed periodic inquiries with European regulators, resulting in zero material findings over 3-year period.</li>
+                <li><strong class="text-slate-100">Quantitative Risk Assessment:</strong> Steered Monte Carlo simulation and Value-at-Risk (VaR) methodologies within the IA function, enabling data-driven prioritization of the annual audit universe and improving risk-ranking accuracy by ~35%.</li>
+                <li><strong class="text-slate-100">Internal Audit & SOX Build-out:</strong> Built and scaled an inhouse IA program from ground up, establishing end-to-end SOX testing deliverables, ITGCs framework, automated-testing, and established OpenPages GRC platform.</li>
+                <li><strong class="text-slate-100">Enterprise Risk Framework:</strong> Architected and embedded a comprehensive ERM program across EMEA, defining 12 risk appetite categories aligned to Board-approved thresholds. Achieved control implementations across all three lines of defense.</li>
+              </ul>
+            </div>
+            
+            <!-- KPMG -->
+            <div class="relative pl-6 border-l-2 border-slate-700 hover:border-brand-teal transition-colors">
+              <div class="absolute left-[-9px] top-1 w-4 h-4 rounded-full bg-slate-900 border-2 border-brand-teal shadow-[0_0_10px_rgba(20,184,166,0.6)]"></div>
+              
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2">
+                <h4 class="text-xl font-bold text-white">KPMG</h4>
+                <span class="text-sm font-medium text-slate-400 bg-slate-800 px-3 py-1 rounded-full mt-2 sm:mt-0">2013 – 2015</span>
+              </div>
+              <p class="text-brand-teal font-semibold mb-1">Senior Consultant / Associate</p>
+              <p class="text-xs text-slate-500 mb-4"><i class="fa-solid fa-location-dot mr-1"></i> India and Bahrain</p>
+              
+              <ul class="text-sm text-slate-300 space-y-3 list-disc pl-4 marker:text-brand-teal">
+                <li><strong class="text-slate-100">Enterprise Risk Management:</strong> Partnered with executive boards to establish risk appetite statements and tailored risk mitigation/remediation strategies for decentralized operations across Metals & Mining, Oil & Gas, and Transportation sectors.</li>
+                <li><strong class="text-slate-100">End-to-End SOX Implementation:</strong> Led full COSO-framework SOX implementations for 12+ multinational clients. Specialized in rationalising controls (~200 controls to 1/6th of total) to reduce testing costs without compromising assurance.</li>
+                <li><strong class="text-slate-100">Setup Internal Audit:</strong> Set up in-house Internal Audit teams twice for a global Healthcare and Pharmaceutical business.</li>
+                <li><strong class="text-slate-100">Fraud Detection & Investigation:</strong> Uncovered ~$2M of unaccounted metals during a Metal Reconciliation audit at Africa's second-largest Zinc mine, and identified significant fraud indicators in a food-sector sales review.</li>
+              </ul>
+            </div>
+
+            <!-- The Phoenix Community Trust -->
+            <div class="relative pl-6 border-l-2 border-transparent">
+              <div class="absolute left-[-9px] top-1 w-4 h-4 rounded-full bg-slate-900 border-2 border-slate-500"></div>
+              
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-baseline mb-2">
+                <h4 class="text-xl font-bold text-white">The Phoenix Community Trust</h4>
+                <span class="text-sm font-medium text-slate-400 bg-slate-800 px-3 py-1 rounded-full mt-2 sm:mt-0">2025 – Present</span>
+              </div>
+              <p class="text-slate-300 font-semibold mb-3">Chair - Audit and Finance Committee, Non-Executive Director (INED)</p>
+              
+              <ul class="text-sm text-slate-300 space-y-3 list-disc pl-4 marker:text-slate-500">
+                <li>Provided strategic direction at an initial challenging pivot phase, ensuring transparent distribution of multi-million-pound portfolios to charities within the UK.</li>
+                <li>Established effective governance towards digital and financial resilience; review operational performance, risk/controls effectiveness, and financial results. Successfully established Risk committee.</li>
+                <li>Driven structural reforms within the UK funding sector by advising on creation of a repeatable and inclusive grant-making framework, including monitoring and performance evaluation.</li>
+              </ul>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- TECH TRANSFORMATIONS -->
+        <section class="space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+            <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+              <i class="fa-solid fa-network-wired text-brand-teal"></i> Tech Control Testing Transformations
+            </h3>
+            <span class="text-xs font-semibold bg-brand-teal/10 text-brand-teal px-3 py-1.5 rounded-full border border-brand-teal/20 whitespace-nowrap">
+              <i class="fa-solid fa-bolt mr-1"></i> Live Architecture
+            </span>
+          </div>
+          <p class="text-sm text-slate-400 italic bg-slate-800/40 p-3 rounded-lg border border-slate-700/50">
+            * Includes automations designed and delivered by me to eliminate manual effort and enhance risk coverage. Hover over titles for details.
+          </p>
+
+          <!-- Transformation A -->
+          <div class="glass-card p-6">
+            <div class="flex items-start gap-4 mb-6 relative group w-max">
+              <div class="w-10 h-10 shrink-0 rounded-lg bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                <span class="text-blue-400 font-bold">A</span>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-white interactive-title">100% Change Management Testing</h4>
+                <p class="text-xs text-slate-400 mt-1">Automated end-to-end SDLC compliance verification.</p>
+              </div>
+              
+              <!-- Tooltip A -->
+              <div class="custom-tooltip absolute bottom-full left-12 mb-2 w-72 p-3 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg shadow-2xl z-50">
+                Automates JIRA/GitHub metadata extraction via Python, feeding a Claude-powered agent for story analysis. Saved ~400 hours annually.
+                <div class="absolute top-full left-8 border-8 border-transparent border-t-slate-700"></div>
+                <div class="absolute top-full left-8 border-[7px] border-transparent border-t-slate-900 -mt-[2px]"></div>
+              </div>
+            </div>
+            
+            <div class="pipeline-container">
+              <div class="node">
+                <div class="flex gap-2 text-slate-300 node-icon"><i class="fa-brands fa-jira"></i> <i class="fa-brands fa-github"></i></div>
+                <div class="node-title">Jira / GitHub</div>
+                <div class="node-sub">User Stories</div>
+              </div>
+              <div class="connector"><div class="data-particle animate-flow pt-blue"></div></div>
+              <div class="node">
+                <i class="fa-brands fa-python text-yellow-400 node-icon"></i>
+                <div class="node-title">Python Middleware</div>
+                <div class="node-sub">Metadata Aggregation</div>
+              </div>
+              <div class="connector"><div class="data-particle animate-flow delay-1 pt-teal"></div></div>
+              <div class="node active-teal">
+                <i class="fa-solid fa-microchip text-brand-teal node-icon"></i>
+                <div class="node-title">Claude Agent</div>
+                <div class="node-sub">LLM Analysis</div>
+              </div>
+              <div class="connector"><div class="data-particle animate-flow delay-2 pt-blue"></div></div>
+              <div class="node">
+                <i class="fa-solid fa-file-circle-check text-blue-400 node-icon"></i>
+                <div class="node-title">Audit Output</div>
+                <div class="node-sub">Compliance Verified</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transformation B -->
+          <div class="glass-card p-6">
+            <div class="flex items-start gap-4 mb-6 relative group w-max">
+              <div class="w-10 h-10 shrink-0 rounded-lg bg-teal-500/10 flex items-center justify-center border border-teal-500/20">
+                <span class="text-brand-teal font-bold">B</span>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-white interactive-title">Web Crawler Agent</h4>
+                <p class="text-xs text-slate-400 mt-1">Continuous monitoring of SaaS sales orders vs. approved list prices.</p>
+              </div>
+              
+              <!-- Tooltip B -->
+              <div class="custom-tooltip absolute bottom-full left-12 mb-2 w-72 p-3 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg shadow-2xl z-50">
+                Automated SaaS sales order validation against list prices and discount compliance, flagging real-time exceptions with 100% population coverage.
+                <div class="absolute top-full left-8 border-8 border-transparent border-t-slate-700"></div>
+                <div class="absolute top-full left-8 border-[7px] border-transparent border-t-slate-900 -mt-[2px]"></div>
+              </div>
+            </div>
+            
+            <div class="pipeline-container">
+              <div class="node">
+                <i class="fa-solid fa-globe text-slate-300 node-icon"></i>
+                <div class="node-title">SaaS Platform</div>
+                <div class="node-sub">Order Population</div>
+              </div>
+              <div class="connector"><div class="data-particle animate-flow pt-blue"></div></div>
+              <div class="node active-blue">
+                <i class="fa-solid fa-spider text-brand-blue node-icon"></i>
+                <div class="node-title">Crawler Agent</div>
+                <div class="node-sub">Data Extraction</div>
+              </div>
+              <div class="connector"><div class="data-particle animate-flow delay-1 pt-blue"></div></div>
+              <div class="node">
+                <i class="fa-solid fa-scale-balanced text-slate-300 node-icon"></i>
+                <div class="node-title">Rules Engine</div>
+                <div class="node-sub">Price Check</div>
+              </div>
+              <div class="flex flex-col justify-center px-4 gap-4">
+                 <div class="flex items-center">
+                   <div class="w-6 h-[2px] bg-slate-700 relative overflow-hidden"><div class="data-particle animate-flow delay-2 pt-teal"></div></div>
+                   <div class="node ml-2 !p-3 !min-w-[100px] border-teal-500/30 bg-teal-500/5">
+                     <i class="fa-solid fa-check text-brand-teal text-lg"></i>
+                     <div class="node-title text-xs mt-1">Compliant</div>
+                   </div>
+                 </div>
+                 <div class="flex items-center">
+                   <div class="w-6 h-[2px] bg-slate-700 relative overflow-hidden"><div class="data-particle animate-flow delay-2 pt-rose"></div></div>
+                   <div class="node ml-2 !p-3 !min-w-[100px] border-rose-500/30 bg-rose-500/5 active-rose">
+                     <i class="fa-solid fa-flag text-rose-500 text-lg"></i>
+                     <div class="node-title text-xs mt-1">Exceptions</div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transformation C -->
+          <div class="glass-card p-6">
+            <div class="flex items-start gap-4 mb-6 relative group w-max">
+              <div class="w-10 h-10 shrink-0 rounded-lg bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+                <span class="text-rose-400 font-bold">C</span>
+              </div>
+              <div>
+                <h4 class="text-lg font-semibold text-white interactive-title">Cyber Security Agent</h4>
+                <p class="text-xs text-slate-400 mt-1">Automated vulnerability mapping across hybrid cloud infra.</p>
+              </div>
+
+              <!-- Tooltip C -->
+              <div class="custom-tooltip absolute bottom-full left-12 mb-2 w-72 p-3 bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg shadow-2xl z-50">
+                Aggregates vulnerabilities across cloud accounts to identify affected assets, automatically raising trackable risks within the compliance portal.
+                <div class="absolute top-full left-8 border-8 border-transparent border-t-slate-700"></div>
+                <div class="absolute top-full left-8 border-[7px] border-transparent border-t-slate-900 -mt-[2px]"></div>
+              </div>
+            </div>
+            
+            <div class="pipeline-container">
+              <div class="flex flex-col gap-3">
+                <div class="node !p-3 !min-w-[110px]"><i class="fa-brands fa-aws text-orange-400 node-icon !mb-1 !text-xl"></i><div class="node-title">AWS Assets</div></div>
+                <div class="node !p-3 !min-w-[110px]"><i class="fa-brands fa-microsoft text-blue-400 node-icon !mb-1 !text-xl"></i><div class="node-title">Azure Assets</div></div>
+              </div>
+              <div class="flex flex-col justify-center px-4 gap-8">
+                 <div class="w-6 h-[2px] bg-slate-700 relative overflow-hidden"><div class="data-particle animate-flow pt-rose"></div></div>
+                 <div class="w-6 h-[2px] bg-slate-700 relative overflow-hidden"><div class="data-particle animate-flow pt-rose delay-1"></div></div>
+              </div>
+              <div class="node active-rose">
+                <i class="fa-solid fa-shield-halved text-rose-500 node-icon"></i>
+                <div class="node-title">Cyber Agent</div>
+                <div class="node-sub">Vuln Aggregation</div>
+              </div>
+              <div class="connector"><div class="data-particle animate-flow delay-1 pt-rose"></div></div>
+              <div class="node">
+                <i class="fa-solid fa-chart-pie text-brand-teal node-icon"></i>
+                <div class="node-title">Risk Dashboard</div>
+                <div class="node-sub">Trackers Raised</div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN: Sidebars (Takes up 1/3 width) -->
+      <div class="xl:col-span-1 space-y-6">
+        
+        <!-- Skills / Areas of Expertise -->
+        <div class="glass-card p-6">
+          <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-brand-teal"></i> Areas of Expertise
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            <span class="bg-slate-700/50 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium">Enterprise Risk Management (ERM)</span>
+            <span class="bg-slate-700/50 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium">Technology, Cyber & IT Risks (ITGCs)</span>
+            <span class="bg-slate-700/50 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium">SOX Setup & Compliance</span>
+            <span class="bg-slate-700/50 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium">Regulatory Audits (FCA, ESMA)</span>
+            <span class="bg-slate-700/50 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium">Financial Crime & AML</span>
+            <span class="bg-slate-700/50 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium">Third-Party & Vendor Risk</span>
+            <span class="bg-slate-700/50 border border-slate-600 text-slate-200 px-3 py-1.5 rounded-md text-xs font-medium">Operational Risk Assessment</span>
+            <span class="bg-slate-700/50 border border-slate-600 text-brand-teal px-3 py-1.5 rounded-md text-xs font-bold">Model Risk & AI/LLM Governance</span>
+          </div>
+        </div>
+
+        <!-- Industries -->
+        <div class="glass-card p-6">
+          <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+            <i class="fa-solid fa-industry text-brand-blue"></i> Industries
+          </h3>
+          <ul class="text-sm text-slate-300 space-y-2">
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-blue text-xs"></i> Financial Services (Tech Focused)</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-blue text-xs"></i> FS Credit Ratings & Private Credit</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-blue text-xs"></i> Asset Management & Banking</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-blue text-xs"></i> Metals and Mining Operations</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-blue text-xs"></i> Oil and Gas & Energy</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-blue text-xs"></i> Airline Operations</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-check text-brand-blue text-xs"></i> Fashion & Retail</li>
+          </ul>
+        </div>
+
+        <!-- Education -->
+        <div class="glass-card p-6">
+          <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+            <i class="fa-solid fa-graduation-cap text-yellow-500"></i> Education
+          </h3>
+          <div class="space-y-4">
+            <div>
+              <h4 class="text-base font-bold text-slate-200">MBA</h4>
+              <p class="text-xs text-slate-400">Warwick Business School, UK (2025)</p>
+            </div>
+            <div>
+              <h4 class="text-base font-bold text-slate-200">Chartered Accountant</h4>
+              <p class="text-xs text-slate-400">ICAI, India (2012)</p>
+            </div>
+            <div>
+              <h4 class="text-base font-bold text-slate-200">B.Com (Honors)</h4>
+              <p class="text-xs text-slate-400">University of Rajasthan, India (2010)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Languages -->
+        <div class="glass-card p-6">
+          <h3 class="text-lg font-bold text-white mb-4 border-b border-slate-700 pb-2 flex items-center gap-2">
+            <i class="fa-solid fa-language text-purple-400"></i> Languages
+          </h3>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center text-sm">
+              <span class="font-semibold text-slate-200">English</span>
+              <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">Fluent</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="font-semibold text-slate-200">Hindi</span>
+              <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">Native</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+              <span class="font-semibold text-slate-200">Deutsche</span>
+              <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">Basic (A1)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
